@@ -1,0 +1,146 @@
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, XPMan;
+
+type
+  TSet_g = record
+    pass: string[50];
+  end;
+  TLogin = class(TForm)
+    Edit1: TEdit;
+    Pass: TLabel;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    Edit2: TEdit;
+    XPManifest1: TXPManifest;
+    procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Edit1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure Edit2KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Login: TLogin;
+  LSet_g: TSet_g;
+  prover: Boolean;
+implementation
+
+uses Unit2, Unit3;
+
+{$R *.dfm}
+
+procedure TLogin.Button1Click(Sender: TObject);
+begin
+l_help.show
+end;
+
+procedure TLogin.FormCreate(Sender: TObject);
+begin
+if FileExists('set.ini') = false then
+  begin
+
+    prover:= false;
+    Edit2.Visible:=true;
+    Pass.Caption := 'Введите пароль и его подтвверждение:';
+
+  //ShowMessage('Net faila set');
+  end
+else
+  begin
+
+    prover:= true;
+    Pass.Caption:= 'Введите пароль:';
+    Button2.Top := Button2.Top - 21;
+    Button3.Top := Button3.Top - 21;
+    login.Height:= login.Height - 21;
+  end;
+end;
+
+procedure TLogin.Button3Click(Sender: TObject);
+begin
+  close;
+end;
+
+procedure TLogin.Button2Click(Sender: TObject);
+var
+  l:file of TSet_g;
+
+  s: TSet_g;
+begin
+  AssignFile(l,'set.ini');
+  if prover = true then    // при существоввании файла
+    begin
+      Reset(l);
+      if FileSize(l) <> 0 then
+      begin
+        Read(l,s);
+        Seek(l,0);
+        
+        if Edit1.Text = s.pass then
+          begin
+            Login.Visible := false;
+            Main.show;
+            CloseFile(l);
+          end
+        else
+          begin
+            Edit1.Text := '';
+            ShowMessage('Неверный пароль');
+          end;
+        end
+      else
+      ShowMessage('Ошибка пароля|1')  // фаил с паролем имеет размер 0
+    end
+  else
+    begin
+      if (Edit1.Text = Edit2.Text) and (edit1.Text <> '') then
+        begin
+          Rewrite(l);
+          s.pass:=edit1.Text;
+          Write(l,s);
+          ShowMessage('Пароль успешно изменен');
+          Login.Visible := false;
+          Main.show;
+          CloseFile(l);
+        end
+      else
+
+          ShowMessage('Не верно задан пароль');
+
+    end;
+end;
+
+procedure TLogin.Edit1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if prover = true then
+  begin
+    if Key = 13 then
+    Button2.Click;
+  end
+  else
+    if key = 13 then
+    Edit2.SetFocus;
+end;
+
+procedure TLogin.Edit2KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+if Key = 13 then
+    Button2.Click;
+end;
+
+end.

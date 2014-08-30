@@ -1,0 +1,8 @@
+[Error] Unit3.pas(73): Undeclared identifier: 'Pass_reset2'
+[Warning] Unit3.pas(76): Unsafe type 'file_pass: file of save_pass'
+[Warning] Unit3.pas(100): Unsafe type 'file_pass: file of save_pass'
+[Warning] Unit3.pas(101): Unsafe type 'file_pass: file of save_pass'
+[Warning] Unit3.pas(103): Unsafe type 'file_pass: file of save_pass'
+[Warning] Unit3.pas(108): Unsafe type 'file_pass: file of save_pass'
+[Warning] Unit3.pas(111): Unsafe type 'file_pass: file of save_pass'
+[Fatal Error] PassDe.dpr(8): Could not compile used unit 'Unit3.pas'

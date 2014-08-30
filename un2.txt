@@ -1,0 +1,307 @@
+unit Unit3;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ComCtrls, Menus, ExtCtrls, ImgList, Buttons;
+
+type
+  save_pass = record  // тип для записи паролей
+    id: Integer;
+    name:string[255];
+    log:string[255];
+    coments: array [0..99] of string[255];
+    pass:string[255];
+    path:string[255];
+    id_catal: Integer;
+  end;
+  catal = record       // тип для записи каталогов
+    id: integer;
+    name: String[255];
+    uroven: integer;
+    image: Integer;
+  end;
+  TMain = class(TForm)
+    MainMenu1: TMainMenu;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    TreeView1: TTreeView;
+    Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    ImageList1: TImageList;
+    Memo1: TMemo;
+    ListView1: TListView;
+    SpeedButton2: TSpeedButton;
+    SpeedButton1: TSpeedButton;
+    Edit1: TEdit;
+    SpeedButton3: TSpeedButton;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    Button4: TButton;
+    Button5: TButton;
+    Edit2: TEdit;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShow(Sender: TObject);
+    procedure TreeView1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
+    procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton3Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Exp_col:boolean;
+  Main: TMain;
+  file_pass:file of save_pass;
+  file_cat: file of catal;
+  output_s: save_pass;
+  output_c: catal;
+  result_db: boolean;  // результат проверки нна существование файла с паролями
+  result_cat: boolean;  // результат проверки на существвование файла с каталагами
+  mynode: TTreeNode;
+implementation
+
+uses Unit1;
+
+{$R *.dfm}
+
+procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  i,urov:integer;
+begin
+CloseFile(file_cat);
+CloseFile(file_pass);
+AssignFile(file_cat,'database.ca');
+Rewrite(file_cat);
+    i:=0;
+    mynode := TreeView1.Items[0];
+if mynode <> nil then
+    begin
+    try
+    repeat
+      output_c.name := TreeView1.Items[i].Text;
+      output_c.id := i;
+      output_c.uroven := TreeView1.Items[i].Level;
+      output_c.image := TreeView1.Items[i].ImageIndex;
+      Write(file_cat,output_c);
+      mynode.getNext;
+      i:=i+1;
+    until mynode = nil
+    except
+    end;
+    end; 
+  login.close
+end;
+
+procedure TMain.FormShow(Sender: TObject);
+var
+  i,urov:integer;
+begin
+  ListView1.Clear;
+  AssignFile(file_cat,'database.ca');
+  AssignFile(file_pass,'database.sp');
+
+//==========================================//
+//  Создание, проверка существования        //
+//  каталогов и их загрузка и их последующее//
+//  сохранение                              //
+//==========================================//
+  if FileExists('database.ca') =  true then
+  begin
+    result_cat:= true;
+    Reset(file_cat);
+    seek(file_cat,0);
+    i:=0;
+    urov := 0;
+    repeat                                                                        // выполняет хоть одно чтение
+      Read(file_cat,output_c);
+      if output_c.uroven > urov then
+      begin
+
+        TreeView1.Items.AddChild(mynode,output_c.name);
+        TreeView1.Items[output_c.id].Selected := true;
+        TreeView1.Items[output_c.id - 1].Selected := false;
+        TreeView1.Items[output_c.id].ImageIndex := output_c.image;
+      end
+      else
+      begin
+        if output_c.uroven = 0 then
+        begin
+          if output_c.id <> 0 then
+          begin
+          mynode := TreeView1.Items[0];
+          TreeView1.Items.Add(mynode,output_c.name);
+          TreeView1.Items[output_c.id].Selected := true;
+          TreeView1.Items[output_c.id -1].Selected := false;
+          TreeView1.Items[output_c.id].ImageIndex := output_c.image;
+          end
+          else
+          begin
+          TreeView1.Items.Add(mynode,output_c.name);
+          TreeView1.Items[output_c.id].Selected := true;
+          TreeView1.Items[output_c.id].ImageIndex := output_c.image;
+          end;
+        end
+        else
+        begin
+          TreeView1.Items.Add(mynode,output_c.name);
+          TreeView1.Items[output_c.id].Selected := true;
+          TreeView1.Items[output_c.id].ImageIndex := output_c.image;
+        end;
+        end;
+   
+
+      i:=i+1;
+      seek(file_cat,i);
+      urov := output_c.uroven;
+    until Eof(file_cat);
+  end
+  else                                  // если не существуют
+  begin
+    result_cat:=false;
+    Rewrite(file_cat);
+    TreeView1.Items.Add(mynode,'Базовые');
+    TreeView1.Items[0].Selected := true;
+    TreeView1.Items[0].ImageIndex := -1;
+        Edit2.Text :=edit2.Text + inttostr(TreeView1.Items[0].Level);
+    TreeView1.Items.AddChild(mynode,'ОС');
+    TreeView1.Items[1].ImageIndex := -1;
+        Edit2.Text :=edit2.Text + inttostr(TreeView1.Items[1].Level);
+    TreeView1.Items.AddChild(mynode,'Интернет');
+    TreeView1.Items[2].ImageIndex := -1;
+        Edit2.Text :=edit2.Text + inttostr(TreeView1.Items[2].Level);
+    TreeView1.Items.AddChild(mynode,'Игры');
+    TreeView1.Items[3].ImageIndex := -1;
+        Edit2.Text :=edit2.Text + inttostr(TreeView1.Items[3].Level);
+    TreeView1.Items.Add(mynode,'Прочее');
+    TreeView1.Items[4].ImageIndex:= -1;
+    edit2.Text := edit2.Text + inttostr(TreeView1.Items[4].Level);
+    i:=0;
+
+    mynode := TreeView1.Items[0];
+if mynode <> nil then
+    begin
+    try
+    repeat
+      output_c.name := TreeView1.Items[i].Text;
+      output_c.id := i;
+      output_c.uroven := TreeView1.Items[i].Level;
+      output_c.image := TreeView1.Items[i].ImageIndex;
+      Write(file_cat,output_c);
+      mynode.getNext;
+      i:=i+1;
+    until mynode = nil
+    except
+    end;
+    end;
+  end;
+    // =====================
+  // работа с самими паролями
+  //
+  //
+  //
+  //
+
+
+
+
+  if FileExists('database.sp') = true then
+  begin
+    result_db:=true;
+    Reset(file_pass);
+  end
+  else
+  begin
+    result_db:=false;
+    Rewrite(file_pass);
+
+  end;
+
+
+  Exp_col:=true;
+  TreeView1.FullExpand;
+
+end;
+
+procedure TMain.TreeView1Click(Sender: TObject);
+begin
+
+  (* case TreeView1.Selected.SelectedIndex of
+   1: begin
+      Memo1.Clear;
+      Memo1.Lines.Add('11111')
+      end;
+
+      Memo1.Clear;
+      Memo1.Lines.Add('222222')
+      end;
+   3: begin
+      Memo1.Clear;
+      Memo1.Lines.Add('33333')
+      end;
+   4: begin
+      Memo1.Clear;
+      Memo1.Lines.Add('444444')
+      end
+      else
+      begin
+      Memo1.Clear;
+      Memo1.Lines.Add('ocnova');
+      end;
+      end; *)
+end;
+
+procedure TMain.SpeedButton2Click(Sender: TObject);
+begin
+  if Exp_col = true then // он разернут
+  begin
+    TreeView1.FullCollapse;
+    Exp_col:=false;
+  end
+  else
+  begin
+    treeview1.FullExpand;
+    Exp_col:=true;
+  end;
+end;
+
+procedure TMain.TreeView1Change(Sender: TObject; Node: TTreeNode);
+begin
+mynode:= node;
+//Label1.Caption := IntToStr(Node.AbsoluteIndex);
+end;
+
+procedure TMain.SpeedButton1Click(Sender: TObject);
+var
+  lev,mes: integer;
+begin
+lev := mynode.Level;
+  if Edit1.Text <> '' then
+    if lev > 0 then
+    TreeView1.Items.AddChild(mynode,edit1.Text)
+    else
+    begin
+      mes :=MessageDlg('Добавть потомка ?',mtConfirmation,mbYesNoCancel, 0);
+      case mes of
+      6: TreeView1.Items.AddChild(mynode,edit1.Text);
+      7: TreeView1.Items.Add(mynode,Edit1.Text);
+      end;
+    end
+    else
+    ShowMessage('Введите имя каталога');
+end;
+
+procedure TMain.SpeedButton3Click(Sender: TObject);
+var
+  lev: integer;
+begin
+  TreeView1.Items.Delete(mynode);
+end;
+
+end.
